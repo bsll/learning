@@ -3,6 +3,9 @@
 # Time    : 2021/5/17 6:12 PM
 # Author  : xiaohui.wang
 # File    : sim_classfilier.py
+#使用softmax 交叉熵损失
+#使用Sequential 堆叠网络层
+
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
@@ -10,14 +13,20 @@ import matplotlib.pyplot as plt
 class Net(nn.Module):
     def __init__(self, n_feature, n_hidden, n_output):
         super(Net, self).__init__()
-        self.n_hidden = torch.nn.Linear(n_feature, n_hidden)
-        self.out = torch.nn.Linear(n_hidden, n_output)
+        self.classify = nn.Sequential(
+            nn.Linear(n_feature, n_hidden),
+            nn.ReLU(),
+            nn.Linear(n_hidden, n_output)
+        )
 
     def forward(self, x_layer):
-        x_layer = torch.relu(self.n_hidden(x_layer))
-        x_layer = self.out(x_layer)
-        x_layer = torch.nn.functional.softmax(x_layer)
+
+        x_layer = self.classify(x_layer)
+        x_layer = nn.functional.softmax(x_layer)
+
         return x_layer
+
+
 
 net = Net(n_feature=2, n_hidden=10, n_output=2)
 optimizer = torch.optim.SGD(net.parameters(), lr=0.02)
@@ -31,7 +40,6 @@ y1 = torch.ones(100)
 
 x = torch.cat((x0, x1)).type(torch.FloatTensor)
 y = torch.cat((y0, y1)).type(torch.LongTensor)
-
 
 for i in range(100):
     out = net(x)
